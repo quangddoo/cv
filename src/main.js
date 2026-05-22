@@ -205,7 +205,7 @@ function renderSection(card, section) {
 
   section.questions.forEach((question, idx) => {
     const progress = allProgress[question.id] || { status: 'not_started' };
-    const answer = storage.getAnswer(question.id);
+    const hasAnswer = storage.hasAnswer(question.id);
 
     const cardEl = document.createElement('div');
     cardEl.id = `question-${question.id}`;
@@ -238,7 +238,7 @@ function renderSection(card, section) {
             </div>
           </div>
           <div class="answer-body markdown-body">
-            ${answer ? '' : `
+            ${hasAnswer ? '' : `
               <div class="no-answer">
                 <div class="no-answer-icon">📝</div>
                 <div class="no-answer-text">Chưa có câu trả lời. Click "Edit" để thêm.</div>
@@ -266,10 +266,11 @@ function renderSection(card, section) {
 
         // Render answer if we have one and haven't rendered yet
         const answerBody = cardEl.querySelector('.answer-body');
-        if (answer && !answerBody.dataset.rendered) {
+        if (hasAnswer && !answerBody.dataset.rendered) {
           answerBody.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Đang render...</div>';
           try {
-            const html = await renderMarkdown(answer);
+            const answerText = await storage.getAnswer(question.id);
+            const html = await renderMarkdown(answerText);
             answerBody.innerHTML = html;
             answerBody.dataset.rendered = 'true';
             // Init mermaid diagrams after DOM update
@@ -317,9 +318,10 @@ function renderSection(card, section) {
 }
 
 // ── Editor ─────────────────────────────────────────────────────
-function openEditor(question) {
+async function openEditor(question) {
   const modal = document.getElementById('editor-modal');
-  const currentAnswer = storage.getAnswer(question.id) || getDefaultAnswerTemplate(question);
+  const answerText = await storage.getAnswer(question.id);
+  const currentAnswer = answerText || getDefaultAnswerTemplate(question);
 
   modal.classList.remove('hidden');
   modal.innerHTML = '';

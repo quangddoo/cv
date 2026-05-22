@@ -12,7 +12,7 @@
  * }
  */
 
-import { defaultAnswers } from '../data/default-answers.js';
+const defaultAnswerFiles = import.meta.glob('../data/answers/**/*.md', { query: '?raw', import: 'default' });
 
 const PREFIX = 'interview_prep_';
 const KEYS = {
@@ -102,13 +102,42 @@ export function getAllProgress() {
 // ── Answers ──────────────────────────────────────────────────────
 
 /**
- * Get the user-written markdown answer for a question.
+ * Check if an answer exists for a question (either user-saved or default).
  * @param {string} questionId
- * @returns {string|null}
+ * @returns {boolean}
  */
-export function getAnswer(questionId) {
+export function hasAnswer(questionId) {
   const all = readJSON(KEYS.answers, {});
-  return all[questionId] ?? defaultAnswers[questionId] ?? null;
+  if (all[questionId] !== undefined && all[questionId] !== null) return true;
+
+  const path = `../data/answers/${questionId}.md`;
+  return !!defaultAnswerFiles[path];
+}
+
+/**
+ * Get the markdown answer for a question (loads dynamically if using default).
+ * @param {string} questionId
+ * @returns {Promise<string|null>}
+ */
+export async function getAnswer(questionId) {
+  const all = readJSON(KEYS.answers, {});
+  if (all[questionId] !== undefined && all[questionId] !== null) {
+    return all[questionId];
+  }
+
+  const path = `../data/answers/${questionId}.md`;
+  const loader = defaultAnswerFiles[path];
+  if (loader) {
+    try {
+      const markdown = await loader();
+      return markdown;
+    } catch (err) {
+      console.error(`[storage] Failed to dynamic-load answer for ${questionId}:`, err);
+      return null;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -251,6 +280,7 @@ export const storage = {
   getProgress,
   setProgress,
   getAllProgress,
+  hasAnswer,
   getAnswer,
   setAnswer,
   getAllAnswers,
