@@ -1,13 +1,99 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cv</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Senior Java Backend Engineer Interview Preparation - Question Bank & Study Tool" />
+  <title>Senior BE Interview Prep</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="app">
+    <!-- Top Bar -->
+    <header id="topbar">
+      <div class="topbar-left">
+        <button id="sidebar-toggle" class="icon-btn" aria-label="Toggle sidebar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 class="app-title">
+          <span class="title-icon">🎯</span>
+          <span>Senior BE Interview Prep</span>
+        </h1>
+      </div>
+      <div class="topbar-center">
+        <div id="search-container"></div>
+      </div>
+      <div class="topbar-right">
+        <button id="flashcard-btn" class="icon-btn" aria-label="Flashcard mode" title="Flashcard Mode">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </button>
+        <button id="stats-btn" class="icon-btn" aria-label="Statistics" title="Statistics">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </button>
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" title="Toggle Theme">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div id="main-layout">
+      <!-- Sidebar -->
+      <aside id="sidebar"></aside>
+
+      <!-- Content Area -->
+      <main id="content">
+        <!-- Welcome screen (shown initially) -->
+        <div id="welcome-screen">
+          <div class="welcome-hero">
+            <div class="welcome-icon">🚀</div>
+            <h2>Chào mừng đến với Senior BE Interview Prep</h2>
+            <p>Chọn một section từ sidebar để bắt đầu ôn luyện</p>
+            <div class="welcome-stats" id="welcome-stats"></div>
+          </div>
+          <div class="quick-actions">
+            <button class="action-card" id="start-review-btn">
+              <span class="action-icon">📖</span>
+              <span class="action-title">Bắt đầu ôn tập</span>
+              <span class="action-desc">Duyệt câu hỏi theo section</span>
+            </button>
+            <button class="action-card" id="start-flashcard-btn">
+              <span class="action-icon">🃏</span>
+              <span class="action-title">Flashcard Mode</span>
+              <span class="action-desc">Ôn nhanh kiểu lật thẻ</span>
+            </button>
+            <button class="action-card" id="start-random-btn">
+              <span class="action-icon">🎲</span>
+              <span class="action-title">Random Quiz</span>
+              <span class="action-desc">Câu hỏi ngẫu nhiên</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Question List (shown when section selected) -->
+        <div id="question-list" class="hidden">
+          <div id="section-header">
+            <h2 id="section-title"></h2>
+            <div id="section-progress"></div>
+          </div>
+          <div id="questions-container"></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Flashcard Modal -->
+    <div id="flashcard-modal" class="modal hidden"></div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="modal hidden"></div>
+
+    <!-- Answer Editor Modal -->
+    <div id="editor-modal" class="modal hidden"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
 </html>
