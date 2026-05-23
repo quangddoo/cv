@@ -1070,7 +1070,7 @@ body {
 
 .modal-body {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   padding: var(--space-5);
 }
 
@@ -1079,7 +1079,8 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  height: 70vh;
+  flex: 1;
+  min-height: 0;
 }
 
 .editor-pane {
@@ -1420,6 +1421,10 @@ body {
   display: none !important;
 }
 
+.mobile-tabs {
+  display: none;
+}
+
 .fade-in {
   animation: fadeIn var(--transition-normal) ease-in forwards;
 }
@@ -1493,6 +1498,32 @@ body {
 
   .editor-layout {
     grid-template-columns: 1fr;
+  }
+
+  .mobile-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-surface);
+  }
+
+  .mobile-tab {
+    flex: 1;
+    padding: var(--space-3);
+    text-align: center;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+
+  .mobile-tab.active {
+    color: var(--accent-primary);
+    border-bottom: 2px solid var(--accent-primary);
+  }
+
+  .editor-pane.hide-on-mobile {
+    display: none !important;
   }
 
   .flashcard-wrapper {

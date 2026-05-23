@@ -59,6 +59,24 @@ export function createAnswerEditor(container, initialContent, onSave, onCancel) 
   modalBody.classList.add('modal-body');
   modalBody.style.padding = '0';
   modalBody.style.overflow = 'hidden';
+  modalBody.style.display = 'flex';
+  modalBody.style.flexDirection = 'column';
+
+  // Mobile Tabs
+  const mobileTabs = document.createElement('div');
+  mobileTabs.classList.add('mobile-tabs');
+  
+  const tabEditor = document.createElement('div');
+  tabEditor.classList.add('mobile-tab', 'active');
+  tabEditor.textContent = 'Markdown';
+  
+  const tabPreview = document.createElement('div');
+  tabPreview.classList.add('mobile-tab');
+  tabPreview.textContent = 'Preview';
+  
+  mobileTabs.appendChild(tabEditor);
+  mobileTabs.appendChild(tabPreview);
+  modalBody.appendChild(mobileTabs);
 
   // Toolbar
   const toolbar = _createToolbar();
@@ -87,7 +105,7 @@ export function createAnswerEditor(container, initialContent, onSave, onCancel) 
 
   // Right pane — preview
   const previewPane = document.createElement('div');
-  previewPane.classList.add('editor-pane');
+  previewPane.classList.add('editor-pane', 'hide-on-mobile');
 
   const previewHeader = document.createElement('div');
   previewHeader.classList.add('editor-pane-header');
@@ -101,6 +119,21 @@ export function createAnswerEditor(container, initialContent, onSave, onCancel) 
 
   editorLayout.appendChild(editorPane);
   editorLayout.appendChild(previewPane);
+
+  // Toggle logic for mobile
+  tabEditor.addEventListener('click', () => {
+    tabEditor.classList.add('active');
+    tabPreview.classList.remove('active');
+    editorPane.classList.remove('hide-on-mobile');
+    previewPane.classList.add('hide-on-mobile');
+  });
+
+  tabPreview.addEventListener('click', () => {
+    tabPreview.classList.add('active');
+    tabEditor.classList.remove('active');
+    previewPane.classList.remove('hide-on-mobile');
+    editorPane.classList.add('hide-on-mobile');
+  });
 
   modalBody.appendChild(editorLayout);
 
@@ -127,6 +160,7 @@ export function createAnswerEditor(container, initialContent, onSave, onCancel) 
   footer.appendChild(saveBtn);
 
   // ── Assemble ───────────────────────────────────────────────────
+  modalContent.style.height = '85vh'; // Ensure layout fits nicely
   modalContent.appendChild(modalHeader);
   modalContent.appendChild(modalBody);
   modalContent.appendChild(footer);
@@ -152,6 +186,28 @@ export function createAnswerEditor(container, initialContent, onSave, onCancel) 
       e.preventDefault();
       _handleSave();
     }
+  });
+
+  // Synced scrolling
+  let isSyncingLeft = false;
+  let isSyncingRight = false;
+  
+  textarea.addEventListener('scroll', () => {
+    if (!isSyncingLeft) {
+      isSyncingRight = true;
+      const percentage = textarea.scrollTop / (textarea.scrollHeight - textarea.clientHeight);
+      previewBody.scrollTop = percentage * (previewBody.scrollHeight - previewBody.clientHeight);
+    }
+    isSyncingLeft = false;
+  });
+
+  previewBody.addEventListener('scroll', () => {
+    if (!isSyncingRight) {
+      isSyncingLeft = true;
+      const percentage = previewBody.scrollTop / (previewBody.scrollHeight - previewBody.clientHeight);
+      textarea.scrollTop = percentage * (textarea.scrollHeight - textarea.clientHeight);
+    }
+    isSyncingRight = false;
   });
 
   // Close on backdrop click
