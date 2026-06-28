@@ -19,7 +19,7 @@
  *
  * @param {HTMLElement} container — element to render into (e.g. .topbar-center)
  * @param {object} questionsData — full questions data object
- * @param {Function} onSelect — (question, cardIndex, sectionIndex) => void
+ * @param {Function} onSelect — (result, query) => void
  * @returns {{ update: Function, destroy: Function, clear: Function }}
  */
 export function createSearchBar(container, questionsData, onSelect) {
@@ -187,10 +187,11 @@ export function createSearchBar(container, questionsData, onSelect) {
   function _selectResult(idx) {
     const r = currentResults[idx];
     if (!r) return;
+    const selectedQuery = input.value.trim();
     _closeDropdown();
     input.value = '';
     if (typeof onSelect === 'function') {
-      onSelect(r.question, r.cardIndex, r.sectionIndex);
+      onSelect(r, selectedQuery);
     }
   }
 

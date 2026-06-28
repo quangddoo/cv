@@ -23,7 +23,7 @@ const state = {
   currentQuestions: [],
   expandedQuestions: new Set(),
   sidebarCollapsed: false,
-  theme: storage.getSettings().theme || 'dark',
+  theme: storage.getSettings().theme || 'light',
 };
 
 // ── Component References ───────────────────────────────────────
@@ -147,28 +147,102 @@ function handleSectionSelect(cardId, sectionId) {
   }
 }
 
-function handleSearchSelect(questionId) {
-  // Find the question across all cards/sections
-  for (const card of questionsData.cards) {
-    for (const section of card.sections) {
-      const q = section.questions.find(q => q.id === questionId);
-      if (q) {
-        handleSectionSelect(card.id, section.id);
-        // Expand this question after render
-        setTimeout(() => {
-          state.expandedQuestions.add(questionId);
-          const el = document.getElementById(`question-${questionId}`);
-          if (el) {
-            el.classList.add('expanded');
-            const answerSection = el.querySelector('.answer-section');
-            if (answerSection) answerSection.classList.add('expanded');
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        }, 100);
-        return;
-      }
+async function handleSearchSelect(result, query = '') {
+  if (!result || !result.id) return;
+
+  const card = questionsData.cards[result.cardIndex];
+  const section = card?.sections?.[result.sectionIndex];
+  if (!card || !section) return;
+
+  handleSectionSelect(card.id, section.id);
+
+  // Wait one frame so section DOM is guaranteed to exist.
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  const cardEl = document.getElementById(`question-${result.id}`);
+  if (!cardEl) return;
+
+  const header = cardEl.querySelector('.question-header');
+  const isExpanded = cardEl.classList.contains('expanded');
+  if (!isExpanded && header) {
+    header.click();
+  }
+
+  // Let async answer rendering complete before locating text in answer body.
+  await new Promise(resolve => setTimeout(resolve, 220));
+
+  let matched = false;
+  if (query) {
+    if (result.matchIn === 'question') {
+      const questionTextEl = cardEl.querySelector('.question-text');
+      matched = highlightAndScrollMatch(questionTextEl, query);
+    } else {
+      const answerBodyEl = cardEl.querySelector('.answer-body');
+      matched = highlightAndScrollMatch(answerBodyEl, query);
     }
   }
+
+  if (!matched) {
+    cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function highlightAndScrollMatch(container, query) {
+  if (!container || !query) return false;
+
+  container.querySelectorAll('.search-jump-highlight').forEach(mark => {
+    const parent = mark.parentNode;
+    if (!parent) return;
+    parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
+    parent.normalize();
+  });
+
+  const lowerQuery = query.toLowerCase();
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      const parentTag = node.parentElement?.tagName;
+      if (parentTag === 'SCRIPT' || parentTag === 'STYLE') return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  let matchedNode = null;
+  let matchIndex = -1;
+
+  while (walker.nextNode()) {
+    const idx = walker.currentNode.nodeValue.toLowerCase().indexOf(lowerQuery);
+    if (idx !== -1) {
+      matchedNode = walker.currentNode;
+      matchIndex = idx;
+      break;
+    }
+  }
+
+  if (!matchedNode || matchIndex === -1) return false;
+
+  const range = document.createRange();
+  range.setStart(matchedNode, matchIndex);
+  range.setEnd(matchedNode, matchIndex + query.length);
+
+  const mark = document.createElement('mark');
+  mark.className = 'search-jump-highlight';
+
+  try {
+    range.surroundContents(mark);
+  } catch {
+    return false;
+  }
+
+  mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(() => {
+    const parent = mark.parentNode;
+    if (!parent) return;
+    parent.replaceChild(document.createTextNode(mark.textContent || ''), mark);
+    parent.normalize();
+  }, 2600);
+
+  return true;
 }
 
 // ── Render Section ─────────────────────────────────────────────

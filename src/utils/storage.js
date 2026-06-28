@@ -162,7 +162,7 @@ export function getAllAnswers() {
 // ── Settings ─────────────────────────────────────────────────────
 
 const DEFAULT_SETTINGS = Object.freeze({
-  theme: 'dark',
+  theme: 'light',
   sidebarCollapsed: false,
   fontSize: 'medium',
   autoSaveInterval: 5000, // ms
