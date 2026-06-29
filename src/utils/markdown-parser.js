@@ -13,6 +13,10 @@
 
 import { marked } from 'marked';
 import mermaid from 'mermaid';
+import markedKatex from 'marked-katex-extension';
+
+// KaTeX stylesheet (side-effect import) — required to style rendered math
+import 'katex/dist/katex.min.css';
 
 // ── Highlight.js — selective language imports ────────────────────
 import hljs from 'highlight.js/lib/core';
@@ -115,6 +119,14 @@ marked.setOptions({
   gfm: true,       // GitHub-flavored markdown
   breaks: false,    // Don't convert \n to <br>
 });
+
+// ── KaTeX math rendering ────────────────────────────────────────
+// Renders inline `$...$` and block `$$...$$` LaTeX via KaTeX.
+// `throwOnError: false` → invalid LaTeX is shown inline in error colour
+// instead of throwing. The extension's default delimiter rules ignore
+// stray currency-style `$` (e.g. "100$") because the content next to a
+// delimiter must not be surrounded by whitespace.
+marked.use(markedKatex({ throwOnError: false }));
 
 // ── Public API ──────────────────────────────────────────────────
 
