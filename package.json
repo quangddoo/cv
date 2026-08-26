@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "validate:content": "node scripts/validate-content.mjs",
+    "validate:content:strict": "node scripts/validate-content.mjs --strict-missing",
     "preview": "vite preview"
   },
   "devDependencies": {
