@@ -1,8 +1,8 @@
-# Answer backlog
+# Answer coverage
 
-> Các question dưới đây đã có trong catalog nhưng chưa có file `src/data/answers/<question-id>.md`. Đây là backlog nội dung, không phải answer placeholder. Chỉ đánh dấu hoàn tất sau khi answer được viết và qua review kỹ thuật.
+> Các question dưới đây từng nằm trong backlog. Hiện cả 140 question đã có answer kỹ thuật tại `src/data/answers/`; bảng ID được giữ lại làm inventory và input cho quality review.
 
-**Tổng số:** 140 question.
+**Tổng số đã hoàn tất:** 140 question.
 
 ## 12. Authentication / security incident
 
