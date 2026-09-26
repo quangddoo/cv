@@ -1386,13 +1386,89 @@ export const questionsData = {
         },
       ]
     },
+    // ═══════════════════════════════════════════════════════════
+    // THẺ 6 — Big Tech Interview Playbook
+    // ═══════════════════════════════════════════════════════════
+    {
+      id: 'card_6',
+      title: 'Thẻ 6 — Big Tech Interview Playbook',
+      type: 'questions',
+      sections: [
+        {
+          id: 'c6_s1', title: '1. Behavioral & Leadership Signals', category: 'bigtech_behavioral',
+          tags: ["big-tech","behavioral","leadership","star"],
+          questions: [
+            { id: 'c6_s1_q1', text: 'Hãy kể về một dự án bạn tạo ra impact lớn nhất. Bạn đã đo impact như thế nào?', index: 1 },
+            { id: 'c6_s1_q2', text: 'Kể về một thất bại kỹ thuật đáng nhớ. Bạn đã thay đổi cách làm việc ra sao sau đó?', index: 2 },
+            { id: 'c6_s1_q3', text: 'Khi có bất đồng với một senior engineer hoặc manager, bạn xử lý thế nào?', index: 3 },
+            { id: 'c6_s1_q4', text: 'Kể về lần bạn phải ra mắt một thay đổi có rủi ro cao trong thời gian gấp.', index: 4 },
+            { id: 'c6_s1_q5', text: 'Kể về lần bạn chủ động giải quyết một vấn đề nằm ngoài ownership chính của mình.', index: 5 },
+          ]
+        },
+        {
+          id: 'c6_s2', title: '2. Ownership, Execution & Product Thinking', category: 'bigtech_execution',
+          tags: ["big-tech","ownership","execution","product"],
+          questions: [
+            { id: 'c6_s2_q1', text: 'Nếu có ba yêu cầu đều được đánh dấu là urgent, bạn ưu tiên như thế nào?', index: 1 },
+            { id: 'c6_s2_q2', text: 'Bạn làm gì khi requirements còn mơ hồ nhưng deadline không đổi?', index: 2 },
+            { id: 'c6_s2_q3', text: 'Khi nào bạn chọn ship nhanh, khi nào bạn dừng để xử lý technical debt hoặc reliability?', index: 3 },
+            { id: 'c6_s2_q4', text: 'Làm sao chứng minh một thay đổi kỹ thuật thực sự tạo giá trị cho người dùng hoặc business?', index: 4 },
+            { id: 'c6_s2_q5', text: 'Khi một dependency team làm bạn bị block, bạn sẽ unblock công việc ra sao mà không tạo conflict?', index: 5 },
+          ]
+        },
+        {
+          id: 'c6_s3', title: '3. System Design Follow-up Questions', category: 'bigtech_system_design_followup',
+          tags: ["big-tech","system-design","scalability","trade-off"],
+          questions: [
+            { id: 'c6_s3_q1', text: 'Trong system design, bạn sẽ hỏi gì để làm rõ requirements và ước lượng scale?', index: 1 },
+            { id: 'c6_s3_q2', text: 'Nếu phải chọn một bottleneck lớn nhất của thiết kế, bạn tìm và xử lý nó thế nào?', index: 2 },
+            { id: 'c6_s3_q3', text: 'Bạn quyết định consistency model như thế nào khi các yêu cầu business mâu thuẫn nhau?', index: 3 },
+            { id: 'c6_s3_q4', text: 'Thiết kế của bạn xử lý partial failure và retry storm ra sao?', index: 4 },
+            { id: 'c6_s3_q5', text: 'Làm sao evolve API hoặc schema mà không phá vỡ các client và consumer cũ?', index: 5 },
+          ]
+        },
+        {
+          id: 'c6_s4', title: '4. Coding Interview Communication', category: 'bigtech_coding_communication',
+          tags: ["big-tech","coding","algorithms","communication"],
+          questions: [
+            { id: 'c6_s4_q1', text: 'Bạn bắt đầu giải một bài coding chưa từng gặp như thế nào?', index: 1 },
+            { id: 'c6_s4_q2', text: 'Trong lúc coding, bạn chứng minh tính đúng đắn của solution ra sao?', index: 2 },
+            { id: 'c6_s4_q3', text: 'Bạn phân tích và cải thiện time complexity, space complexity như thế nào?', index: 3 },
+            { id: 'c6_s4_q4', text: 'Bạn chủ động tìm edge case và thiết kế test case ra sao?', index: 4 },
+            { id: 'c6_s4_q5', text: 'Nếu bị stuck trong coding interview, bạn sẽ giao tiếp và thay đổi chiến lược thế nào?', index: 5 },
+          ]
+        },
+        {
+          id: 'c6_s5', title: '5. Senior / Staff-Level Scope', category: 'bigtech_leveling',
+          tags: ["big-tech","senior","staff","influence"],
+          questions: [
+            { id: 'c6_s5_q1', text: 'Theo bạn, khác biệt giữa Senior Engineer và Staff Engineer nằm ở đâu?', index: 1 },
+            { id: 'c6_s5_q2', text: 'Bạn tạo ảnh hưởng thế nào khi không có quyền quản lý trực tiếp các team liên quan?', index: 2 },
+            { id: 'c6_s5_q3', text: 'Bạn xây dựng technical strategy cho một domain trong 6–12 tháng như thế nào?', index: 3 },
+            { id: 'c6_s5_q4', text: 'Bạn mentor một engineer đang chưa đạt kỳ vọng nhưng vẫn giữ được sự tin tưởng ra sao?', index: 4 },
+            { id: 'c6_s5_q5', text: 'Khi nhiều team không đồng thuận về một quyết định kiến trúc, bạn đưa nhóm tới quyết định thế nào?', index: 5 },
+          ]
+        },
+        {
+          id: 'c6_s6', title: '6. Customer, Quality & Responsible Engineering', category: 'bigtech_quality',
+          tags: ["big-tech","customer","reliability","security","ai"],
+          questions: [
+            { id: 'c6_s6_q1', text: 'Bạn chọn metric nào để biết một sản phẩm hoặc feature mới đang thành công?', index: 1 },
+            { id: 'c6_s6_q2', text: 'Khi customer impact và engineering convenience mâu thuẫn, bạn quyết định thế nào?', index: 2 },
+            { id: 'c6_s6_q3', text: 'Bạn đưa reliability và operational excellence vào kế hoạch phát triển feature ra sao?', index: 3 },
+            { id: 'c6_s6_q4', text: 'Khi dùng AI hoặc tự động hóa trong sản phẩm, bạn kiểm soát privacy, safety và human oversight thế nào?', index: 4 },
+            { id: 'c6_s6_q5', text: 'Nếu được nhận vào team, bạn sẽ tìm hiểu và tạo impact trong 90 ngày đầu như thế nào?', index: 5 },
+          ]
+        },
+      ]
+    },
   ],
 
   // Metadata
   metadata: {
     totalQuestions: 0, // Will be computed
     totalSections: 0,
-    lastUpdated: '2026-05-22'
+    lastUpdated: '2026-08-26'
   }
 };
 

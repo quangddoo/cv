@@ -211,7 +211,7 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
   async function _renderBack() {
     const q = questions[currentIndex];
     if (!q || !q.answer) {
-      backContent.innerHTML = '<p style="color:var(--text-muted);">No answer available.</p>';
+      backContent.innerHTML = '<p style="color:var(--text-muted);">Chưa có câu trả lời cho question này.</p>';
       return;
     }
     const html = await renderMarkdown(q.answer);
