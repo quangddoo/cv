@@ -43,6 +43,9 @@ jobs:
         run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v4
+        with:
+          # Create/configure the Pages site automatically if it has not been enabled yet.
+          enablement: true
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
