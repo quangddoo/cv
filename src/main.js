@@ -60,7 +60,7 @@ function init() {
     storage.setSettings({ ...storage.getSettings(), theme: state.theme });
   });
 
-  document.getElementById('flashcard-btn').addEventListener('click', openFlashcardAll);
+  document.getElementById('flashcard-btn').addEventListener('click', () => openFlashcardAll(20));
   document.getElementById('stats-btn').addEventListener('click', openStats);
 
   // Welcome screen actions
@@ -70,7 +70,7 @@ function init() {
     if (firstSection) handleSectionSelect(questionsData.cards[0].id, firstSection.id);
   });
 
-  document.getElementById('start-flashcard-btn').addEventListener('click', openFlashcardAll);
+  document.getElementById('start-flashcard-btn').addEventListener('click', () => openFlashcardAll(20));
   document.getElementById('start-random-btn').addEventListener('click', openRandomQuiz);
 
   // Keyboard shortcuts
@@ -272,7 +272,15 @@ function renderSection(card, section) {
     <span>${done}/${total} đã ôn</span>
     <span style="margin-left: 8px; color: var(--success);">✓ ${mastered}</span>
     <span style="margin-left: 8px; color: var(--warning);">⟳ ${review}</span>
+    <button class="btn btn-secondary btn-sm" id="section-flashcard-btn" style="margin-left: 12px; font-size: var(--text-xs); padding: 4px 10px;" title="Ôn tập phần này bằng Flashcard">🃏 Flashcard</button>
   `;
+
+  const secFcBtn = progressEl.querySelector('#section-flashcard-btn');
+  if (secFcBtn) {
+    secFcBtn.addEventListener('click', () => {
+      openFlashcardSection(card, section);
+    });
+  }
 
   // Clear and render questions
   container.innerHTML = '';
@@ -560,7 +568,9 @@ function getDefaultAnswerTemplate(question) {
 }
 
 // ── Flashcard ──────────────────────────────────────────────────
-function openFlashcardAll() {
+function openFlashcardAll(count = 20) {
+  const limit = typeof count === 'number' && !isNaN(count) && count > 0 ? count : 20;
+
   // Collect all questions from question-type cards
   const allQuestions = [];
   questionsData.cards.forEach(card => {
@@ -582,8 +592,8 @@ function openFlashcardAll() {
     [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
   }
 
-  // Limit to 20 for a session
-  const sessionQuestions = allQuestions.slice(0, 20);
+  // Limit to count for a session
+  const sessionQuestions = allQuestions.slice(0, limit);
 
   const modal = document.getElementById('flashcard-modal');
   modal.classList.remove('hidden');
@@ -602,13 +612,45 @@ function openFlashcardAll() {
     () => {
       modal.classList.add('hidden');
       modal.innerHTML = '';
-    }
+    },
+    { getAnswer: storage.getAnswer }
+  );
+}
+
+function openFlashcardSection(card, section) {
+  if (!section.questions || section.questions.length === 0) return;
+  const questions = section.questions.map(q => ({
+    ...q,
+    sectionTitle: section.title,
+    cardTitle: card.title,
+  }));
+
+  const modal = document.getElementById('flashcard-modal');
+  modal.classList.remove('hidden');
+
+  createFlashcardMode(
+    modal,
+    questions,
+    (questionId, rating) => {
+      const statusMap = { again: 'learning', hard: 'review', good: 'review', easy: 'mastered' };
+      storage.setProgress(questionId, {
+        status: statusMap[rating] || 'learning',
+        lastReviewed: new Date().toISOString(),
+      });
+      if (sidebar) sidebar.update();
+      renderSection(card, section);
+    },
+    () => {
+      modal.classList.add('hidden');
+      modal.innerHTML = '';
+    },
+    { getAnswer: storage.getAnswer }
   );
 }
 
 function openRandomQuiz() {
-  // Same as flashcard but with 10 random questions
-  openFlashcardAll();
+  // 10 random questions
+  openFlashcardAll(10);
 }
 
 // ── Stats ──────────────────────────────────────────────────────

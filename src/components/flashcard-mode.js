@@ -9,9 +9,11 @@
  *   .modal, .modal-content, .modal-header, .modal-title, .modal-close,
  *   .modal-body, .flashcard-container, .flashcard-progress,
  *   .flashcard-wrapper, .flashcard, .flipped, .flashcard-face,
- *   .flashcard-front, .flashcard-back, .flashcard-hint,
- *   .flashcard-controls, .flashcard-rate-btn, .again, .hard, .good, .easy,
- *   .flashcard-nav, .flashcard-nav-btn, .markdown-body
+ *   .flashcard-front, .flashcard-back, .flashcard-badge, .flashcard-front-text,
+ *   .flashcard-hint, .flashcard-back-header, .flashcard-back-title,
+ *   .flashcard-flip-btn, .flashcard-back-content, .flashcard-loading,
+ *   .spinner, .flashcard-controls, .flashcard-rate-btn,
+ *   .again, .hard, .good, .easy, .flashcard-nav, .flashcard-nav-btn, .markdown-body
  *
  * Keyboard shortcuts:
  *   Space  — flip card
@@ -27,17 +29,20 @@
  */
 
 import { renderMarkdown, initMermaidDiagrams } from '../utils/markdown-parser.js';
+import { getAnswer } from '../utils/storage.js';
 
 /**
  * Create and show the flashcard mode overlay.
  *
- * @param {HTMLElement} container — element to append the overlay to (document.body)
- * @param {Array<object>} questions — array of question objects { id, text, answer, ... }
+ * @param {HTMLElement} container — element to append the overlay to (or existing modal element)
+ * @param {Array<object>} questions — array of question objects { id, text, answer, sectionTitle, cardTitle, ... }
  * @param {Function} onRate — (questionId, rating) => void   rating ∈ { 'again','hard','good','easy' }
  * @param {Function} onClose — () => void
+ * @param {object} [options]
+ * @param {Function} [options.getAnswer] — async (questionId) => string
  * @returns {{ destroy: Function, goTo: Function }}
  */
-export function createFlashcardMode(container, questions, onRate, onClose) {
+export function createFlashcardMode(container, questions, onRate, onClose, options = {}) {
   if (!questions || questions.length === 0) {
     console.warn('[flashcard] No questions provided.');
     return { destroy() {}, goTo() {} };
@@ -45,10 +50,18 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
 
   let currentIndex = 0;
   let isFlipped = false;
+  let renderedCardIndex = -1;
+  const answerCache = new Map();
 
   // ── Modal overlay ──────────────────────────────────────────────
-  const modal = document.createElement('div');
-  modal.classList.add('modal');
+  const isModalContainer = container.classList.contains('modal');
+  const modal = isModalContainer ? container : document.createElement('div');
+  if (!isModalContainer) {
+    modal.classList.add('modal');
+  } else {
+    modal.innerHTML = '';
+    modal.classList.remove('hidden');
+  }
 
   const modalContent = document.createElement('div');
   modalContent.classList.add('modal-content');
@@ -66,6 +79,7 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
   const closeBtn = document.createElement('button');
   closeBtn.classList.add('modal-close');
   closeBtn.innerHTML = '✕';
+  closeBtn.title = 'Close (Escape)';
   closeBtn.addEventListener('click', _close);
 
   modalHeader.appendChild(title);
@@ -92,19 +106,23 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
   // The card itself (rotates on flip)
   const flashcard = document.createElement('div');
   flashcard.classList.add('flashcard');
-  flashcard.addEventListener('click', _flip);
 
   // Front face
   const front = document.createElement('div');
   front.classList.add('flashcard-face', 'flashcard-front');
+  front.addEventListener('click', _flip);
+
+  const badge = document.createElement('div');
+  badge.classList.add('flashcard-badge');
 
   const frontText = document.createElement('div');
-  frontText.style.cssText = 'font-size:var(--text-lg);line-height:var(--leading-relaxed);';
+  frontText.classList.add('flashcard-front-text');
 
   const frontHint = document.createElement('div');
   frontHint.classList.add('flashcard-hint');
-  frontHint.textContent = 'Click or press Space to reveal answer';
+  frontHint.innerHTML = '<span>🖱️ Nhấp thẻ hoặc phím <kbd style="padding:2px 6px;border-radius:4px;border:1px solid var(--border-color);background:var(--bg-card);font-family:var(--font-mono);font-size:var(--text-xs);">Space</kbd> để xem câu trả lời</span>';
 
+  front.appendChild(badge);
   front.appendChild(frontText);
   front.appendChild(frontHint);
 
@@ -112,10 +130,30 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
   const back = document.createElement('div');
   back.classList.add('flashcard-face', 'flashcard-back');
 
-  const backContent = document.createElement('div');
-  backContent.classList.add('markdown-body');
-  backContent.style.cssText = 'width:100%;overflow-y:auto;max-height:100%;';
+  const backHeader = document.createElement('div');
+  backHeader.classList.add('flashcard-back-header');
 
+  const backTitle = document.createElement('div');
+  backTitle.classList.add('flashcard-back-title');
+
+  const flipBackBtn = document.createElement('button');
+  flipBackBtn.classList.add('flashcard-flip-btn');
+  flipBackBtn.innerHTML = '🔄 Lật lại <kbd style="font-size:10px;padding:1px 4px;border:1px solid var(--border-color);border-radius:3px;">Space</kbd>';
+  flipBackBtn.title = 'Lật lại mặt câu hỏi (phím Space)';
+  flipBackBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    _flip();
+  });
+
+  backHeader.appendChild(backTitle);
+  backHeader.appendChild(flipBackBtn);
+
+  const backContent = document.createElement('div');
+  backContent.classList.add('flashcard-back-content', 'markdown-body');
+  // Prevent clicks inside answer from accidentally flipping the card
+  backContent.addEventListener('click', (e) => e.stopPropagation());
+
+  back.appendChild(backHeader);
   back.appendChild(backContent);
 
   flashcard.appendChild(front);
@@ -152,7 +190,7 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
   prevBtn.addEventListener('click', _prev);
 
   const navLabel = document.createElement('span');
-  navLabel.style.cssText = 'font-size:var(--text-sm);color:var(--text-muted);';
+  navLabel.style.cssText = 'font-size:var(--text-sm);color:var(--text-muted);font-weight:var(--font-medium);';
 
   const nextBtn = document.createElement('button');
   nextBtn.classList.add('flashcard-nav-btn');
@@ -175,11 +213,21 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
   modalContent.appendChild(modalHeader);
   modalContent.appendChild(modalBody);
   modal.appendChild(modalContent);
-  container.appendChild(modal);
+
+  if (!isModalContainer) {
+    container.appendChild(modal);
+  }
+
+  // Backdrop click to close
+  const _backdropClick = (e) => {
+    if (e.target === modal) _close();
+  };
+  modal.addEventListener('click', _backdropClick);
 
   // ── Keyboard shortcuts ─────────────────────────────────────────
 
   const _keyHandler = (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     switch (e.key) {
       case ' ':
         e.preventDefault();
@@ -198,25 +246,84 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
 
   // ── Internal logic ─────────────────────────────────────────────
 
+  async function _loadAnswer(q) {
+    if (!q) return null;
+    if (q.answer) return q.answer;
+    if (answerCache.has(q.id)) return answerCache.get(q.id);
+
+    const fetcher = typeof options.getAnswer === 'function' ? options.getAnswer : getAnswer;
+    try {
+      const text = await fetcher(q.id);
+      if (text) {
+        q.answer = text;
+        answerCache.set(q.id, text);
+        return text;
+      }
+    } catch (err) {
+      console.error(`[flashcard] Failed to fetch answer for ${q.id}:`, err);
+    }
+    return null;
+  }
+
   function _flip() {
     isFlipped = !isFlipped;
     flashcard.classList.toggle('flipped', isFlipped);
 
-    // Render answer on first flip (lazy)
-    if (isFlipped && backContent.innerHTML === '') {
+    // Render answer on flip
+    if (isFlipped) {
       _renderBack();
     }
   }
 
   async function _renderBack() {
-    const q = questions[currentIndex];
-    if (!q || !q.answer) {
-      backContent.innerHTML = '<p style="color:var(--text-muted);">Chưa có câu trả lời cho question này.</p>';
+    const cardIndex = currentIndex;
+    const q = questions[cardIndex];
+    if (!q) return;
+
+    if (renderedCardIndex === cardIndex && backContent.innerHTML !== '') {
+      return; // Already rendered for this card
+    }
+
+    // Show loading state
+    backContent.innerHTML = `
+      <div class="flashcard-loading">
+        <div class="spinner"></div>
+        <p style="color:var(--text-muted);font-size:var(--text-sm);margin-top:var(--space-2);">Đang tải câu trả lời...</p>
+      </div>
+    `;
+
+    const answerText = await _loadAnswer(q);
+
+    // Guard against race conditions if card switched or flipped back while loading
+    if (currentIndex !== cardIndex || !isFlipped) {
       return;
     }
-    const html = await renderMarkdown(q.answer);
-    backContent.innerHTML = html;
-    await initMermaidDiagrams(backContent);
+
+    if (!answerText) {
+      backContent.innerHTML = `
+        <div style="text-align:center;padding:var(--space-8);color:var(--text-muted);">
+          <div style="font-size:2rem;margin-bottom:var(--space-2);">📝</div>
+          <p>Chưa có câu trả lời cho câu hỏi này.</p>
+        </div>
+      `;
+      renderedCardIndex = cardIndex;
+      return;
+    }
+
+    try {
+      const html = await renderMarkdown(answerText);
+      if (currentIndex !== cardIndex || !isFlipped) return;
+
+      backContent.innerHTML = html;
+      renderedCardIndex = cardIndex;
+      backContent.scrollTop = 0;
+
+      await initMermaidDiagrams(backContent);
+    } catch (err) {
+      console.error('[flashcard] Markdown render error:', err);
+      if (currentIndex !== cardIndex || !isFlipped) return;
+      backContent.innerHTML = `<pre style="color:var(--error);padding:var(--space-4);">Lỗi hiển thị câu trả lời: ${err.message}</pre>`;
+    }
   }
 
   function _showCard(index) {
@@ -226,9 +333,22 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
 
     const q = questions[currentIndex];
     frontText.textContent = q.text || '';
-    backContent.innerHTML = ''; // will be lazy-rendered on flip
 
-    progressLabel.textContent = `Card ${currentIndex + 1} of ${questions.length}`;
+    const sectionInfo = [q.cardTitle, q.sectionTitle].filter(Boolean).join(' › ');
+    if (sectionInfo) {
+      badge.textContent = sectionInfo;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    backTitle.textContent = q.text || '';
+    backTitle.title = q.text || '';
+
+    backContent.innerHTML = '';
+    renderedCardIndex = -1;
+
+    progressLabel.textContent = `Thẻ ${currentIndex + 1} / ${questions.length}`;
     navLabel.textContent = `${currentIndex + 1} / ${questions.length}`;
 
     // Disable nav buttons at bounds
@@ -236,6 +356,12 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
     nextBtn.disabled = currentIndex === questions.length - 1;
     prevBtn.style.opacity = currentIndex === 0 ? '0.3' : '1';
     nextBtn.style.opacity = currentIndex === questions.length - 1 ? '0.3' : '1';
+
+    // Preload current card answer and next card answer
+    _loadAnswer(q);
+    if (currentIndex + 1 < questions.length) {
+      _loadAnswer(questions[currentIndex + 1]);
+    }
   }
 
   function _prev() {
@@ -254,12 +380,20 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
     // Auto-advance to next card after rating
     if (currentIndex < questions.length - 1) {
       _next();
+    } else {
+      progressLabel.textContent = `🎉 Đã hoàn thành ${questions.length} / ${questions.length} thẻ!`;
     }
   }
 
   function _close() {
     document.removeEventListener('keydown', _keyHandler);
-    modal.remove();
+    modal.removeEventListener('click', _backdropClick);
+    if (isModalContainer) {
+      modal.classList.add('hidden');
+      modal.innerHTML = '';
+    } else {
+      modal.remove();
+    }
     if (typeof onClose === 'function') onClose();
   }
 
@@ -280,8 +414,7 @@ export function createFlashcardMode(container, questions, onRate, onClose) {
      * Tear down the flashcard overlay.
      */
     destroy() {
-      document.removeEventListener('keydown', _keyHandler);
-      modal.remove();
+      _close();
     },
   };
 }
