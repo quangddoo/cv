@@ -8,6 +8,7 @@
     "build": "vite build",
     "validate:content": "node scripts/validate-content.mjs",
     "validate:content:strict": "node scripts/validate-content.mjs --strict-missing",
+    "validate:mermaid": "node scripts/validate-mermaid.mjs",
     "preview": "vite preview"
   },
   "devDependencies": {

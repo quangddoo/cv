@@ -80,6 +80,15 @@ let mermaidIdCounter = 0;
 // Custom renderer overrides
 const renderer = new marked.Renderer();
 
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Override code block rendering:
  * – `mermaid` blocks → wrapped in <div class="mermaid"> for later init.
@@ -92,7 +101,7 @@ renderer.code = function (codeObj) {
 
   if (lang === 'mermaid') {
     mermaidIdCounter++;
-    return `<div class="mermaid" id="mermaid-${mermaidIdCounter}">${text}</div>`;
+    return `<div class="mermaid" id="mermaid-${mermaidIdCounter}">${escapeHtml(text)}</div>`;
   }
 
   // Try to highlight with the requested language
@@ -164,14 +173,16 @@ export async function initMermaidDiagrams(container) {
   if (nodes.length === 0) return;
 
   for (const node of nodes) {
+    const id = node.id || `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     try {
-      const id = node.id || `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
       const graphDefinition = node.textContent.trim();
       const { svg } = await mermaid.render(id + '-svg', graphDefinition);
       node.innerHTML = svg;
       node.setAttribute('data-processed', 'true');
     } catch (err) {
       console.warn('[mermaid] diagram render failed:', err);
+      const stray = document.getElementById('d' + id + '-svg') || document.getElementById(id + '-svg');
+      if (stray) stray.remove();
       node.innerHTML = `<pre style="color:var(--error)">[Mermaid error] ${err.message}</pre>`;
       node.setAttribute('data-processed', 'true');
     }
